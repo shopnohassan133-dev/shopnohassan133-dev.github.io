@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANONYMOUS SHOPNO | DIGITAL FORTRESS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Fira+Code:wght@400;500&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+        body { background: #000; color: #00ff00; font-family: 'Fira Code', monospace; overflow: hidden; touch-action: none; }
+
+        /* 3D Canvas Background */
+        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+
+        /* Lightning Canvas for Touch Effect */
+        #lightning-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; }
+
+        /* Main Scrollable Container */
+        .wrapper {
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            scrollbar-width: none;
+        }
+        .wrapper::-webkit-scrollbar { display: none; }
+
+        /* Profile HUD */
+        .profile-container {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .profile-img {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #00ff00;
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+            filter: brightness(1.2);
+        }
+
+        .hud-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px dashed #00ff00;
+            border-radius: 50%;
+            animation: rotateHUD 8s linear infinite;
+        }
+
+        .hud-ring-inner {
+            position: absolute;
+            width: 155px;
+            height: 155px;
+            border: 2px solid transparent;
+            border-top: 3px solid #ff0000;
+            border-bottom: 3px solid #00ff00;
+            border-radius: 50%;
+            animation: rotateHUD 4s linear infinite reverse;
+        }
+
+        @keyframes rotateHUD { 100% { transform: rotate(360deg); } }
+
+        .header-section { text-align: center; margin-bottom: 30px; }
+        .main-title { font-family: 'Orbitron', sans-serif; font-size: 2.2rem; letter-spacing: 5px; color: #fff; text-shadow: 0 0 15px #00ff00; }
+        .sub-title { font-size: 0.85rem; color: #ff0000; font-weight: bold; margin-top: 5px; letter-spacing: 2px; text-transform: uppercase; }
+
+        .section-title {
+            color: #fff;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 500px;
+            text-align: left;
+            border-left: 3px solid #ff0000;
+            padding-left: 10px;
+        }
+
+        /* Expert Grid */
+        .expert-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 30px;
+        }
+
+        .expert-btn {
+            background: rgba(0, 40, 0, 0.2);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            padding: 12px 15px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.75rem;
+            color: #fff;
+        }
+
+        .expert-btn i { color: #00ff00; }
+        .expert-btn b { color: #ff0000; margin-left: auto; }
+
+        /* Social Link List */
+        .link-list {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .cyber-btn {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 255, 0, 0.03);
+            border: 1px solid rgba(0, 255, 0, 0.2);
+            padding: 18px 25px;
+            border-radius: 12px;
+            color: #00ff00;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.95rem;
+            position: relative;
+            transition: 0.4s;
+        }
+
+        .cyber-btn:hover {
+            background: rgba(0, 255, 0, 0.1);
+            border-color: #00ff00;
+            transform: translateX(10px);
+        }
+
+        .cyber-btn i { margin-right: 20px; font-size: 1.4rem; }
+
+        /* Terminal Logs (Serialized) */
+        .about-terminal {
+            width: 100%;
+            max-width: 550px;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid #333;
+            border-top: 3px solid #00ff00;
+            padding: 25px;
+            margin-bottom: 40px;
+            font-size: 0.85rem;
+            line-height: 1.8;
+            color: #ccc;
+            border-radius: 5px;
+        }
+
+        .about-terminal h3 { color: #00ff00; margin-bottom: 15px; font-family: 'Orbitron', sans-serif; font-size: 1.1rem; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        .log-num { color: #aaaaaa; margin-right: 10px; }
+        .highlight { color: #ff0000; font-weight: bold; }
+        .neon-green { color: #00ff00; }
+
+        /* --- SMALL & SIMPLE BANGLA TEXT (UPDATED) --- */
+        .bangla-footer {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 40px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 0, 0, 0.3);
+            padding-top: 15px;
+        }
+
+        .bangla-text-small {
+            color: #ff0000;
+            font-size: 0.85rem; /* Small Size as requested */
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+            opacity: 0.9;
+        }
+
+        #bg-music { display: none; }
+    </style>
+</head>
+<body onclick="startExperience()">
+
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="lightning-canvas"></canvas>
+
+    <audio id="bg-music" loop>
+        <source src="https://files.catbox.moe/ex8pue.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="wrapper">
+        <div class="profile-container">
+            <div class="hud-ring"></div>
+            <div class="hud-ring-inner"></div>
+            <img src="https://i.ibb.co.com/B5GnQfHS/1774327605490.png" class="profile-img" alt="Anonymous Sainad">
+        </div>
+
+        <div class="header-section">
+            <h1 class="main-title">ANONYMOUS SHOPNO</h1>
+            <p class="sub-title">Founder And Ceo: BETTER WORLD 🌍</p>
+        </div>
+
+        <h2 class="section-title">Dark Experience</h2>
+        <div class="expert-grid">
+            <div class="expert-btn"><i class="fas fa-terminal"></i> Python Programmer <b></b></div>
+            <div class="expert-btn"><i class="fas fa-bolt"></i> Ethical Hacker<b>Expert X</b></div>
+            <div class="expert-btn"><i class="fas fa-ghost"></i>Bug Bounty Hunter </div>
+            <div class="expert-btn"><i class="fas fa-code"></i> Web Developer</div>
+            <div class="expert-btn"><i class="fas fa-mobile-screen"></i> App Developer</div>
+            <div class="expert-btn"><i class="fab fa-linux"></i> Kali Linux Pro</div>
+        </div>
+
+        <h2 class="section-title">Contact Nodes</h2>
+        <div class="link-list">
+            <a href="https://t.me/anonymoussainad" class="cyber-btn"><i class="fab fa-telegram-plane"></i> Personal Telegram ID</a>
+            <a href="https://t.me/+GhJvgEplRJ0zOGI1" class="cyber-btn"><i class="fas fa-satellite-dish"></i> Telegram Channel</a>
+            <a href="https://www.facebook.com/shopnohassan13" class="cyber-btn"><i class="fab fa-facebook-f"></i> Facebook ID</a>
+            <a href="https://t.me/" class="cyber-btn" style="border-color:#ff0000; color:#ff0000;"><i class="fas fa-skull"></i> Free Tools Bot</a>
+        </div>
+
+        <div class="about-terminal">
+            <h3>[ SHOPNO_DATABASE_QUERY ]</h3>
+            <div class="about-log">
+                <p><span class="log-num">1.</span> User: <span class="neon-green">ANONYMOUS SHOPNO</span></p>
+                <p><span class="log-num">2.</span> Affiliation: <span class="highlight">BETTER WORLD 🌍</span></p>
+                <p><span class="log-num">3.</span> Designation: Cyber Security Architect</p>
+                <p><span class="log-num">4.</span> Specialization: System Vulnerability</p>
+                <p><span class="log-num">5.</span> Vision: Creative Problem Solving</p>
+                <p><span class="log-num">6.</span> Community: Advanced Tool Sharing</p>
+                <p><span class="log-num">7.</span> Focus: SMM & Bot Automation</p>
+                <p><span class="log-num">8.</span> Domain: Deep Web Navigation</p>
+                <p><span class="log-num">9.</span> Motto: Knowledge is Power</p>
+                <p><span class="log-num">10.</span> Status: <span class="highlight">UNSTOPPABLE</span></p>
+            </div>
+        </div>
+
+        <div class="bangla-footer">
+            <div class="bangla-text-small">
+                Hacking is not a crime, hacking is an art, I am a craftsman of that art 🎭 
+                 
+            </div>
+        </div>
+
+        <p style="font-size: 0.6rem; opacity: 0.3; margin-bottom: 20px;">[ SESSION_ACTIVE_2026 ]</p>
+    </div>
+
+    <script>
+        // --- 3D Background ---
+        let scene, camera, renderer, particles;
+        function init3D() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            const geo = new THREE.BufferGeometry();
+            const pos = [];
+            for (let i = 0; i < 4000; i++) pos.push((Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10);
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+            const mat = new THREE.PointsMaterial({ color: 0x00ff00, size: 0.02, transparent: true, opacity: 0.6 });
+            particles = new THREE.Points(geo, mat);
+            scene.add(particles);
+            camera.position.z = 3;
+        }
+        function animate() {
+            requestAnimationFrame(animate);
+            particles.rotation.y += 0.001;
+            renderer.render(scene, camera);
+        }
+        init3D(); animate();
+
+        // --- ELECTRIC EFFECT ON TOUCH ---
+        const lCanvas = document.getElementById('lightning-canvas');
+        const ctx = lCanvas.getContext('2d');
+        lCanvas.width = window.innerWidth;
+        lCanvas.height = window.innerHeight;
+
+        function createLightning(x, y) {
+            ctx.clearRect(0, 0, lCanvas.width, lCanvas.height);
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#00ff00';
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#00ff00';
+                let curX = x; let curY = y;
+                ctx.moveTo(curX, curY);
+                for (let j = 0; j < 8; j++) {
+                    curX += (Math.random() - 0.5) * 50;
+                    curY += (Math.random() - 0.5) * 50;
+                    ctx.lineTo(curX, curY);
+                }
+                ctx.stroke();
+            }
+            setTimeout(() => ctx.clearRect(0, 0, lCanvas.width, lCanvas.height), 120);
+        }
+
+        window.addEventListener('mousedown', (e) => createLightning(e.clientX, e.clientY));
+        window.addEventListener('touchstart', (e) => createLightning(e.touches[0].clientX, e.touches[0].clientY));
+
+        function startExperience() {
+            document.getElementById('bg-music').play().catch(() => {});
+        }
+    </script>
+</body>
+</html>
